@@ -1,0 +1,16 @@
+flowchart TD
+    p0((Channel.fromPath))
+    p1([map])
+    p2(( ))
+    p3(( ))
+    p4[RUN_VEP:VEP]
+    p5(( ))
+    p6(( ))
+    p7(( ))
+    p0 --> p1
+    p1 -->|vcf_channel| p4
+    p2 -->|vep_config| p4
+    p3 -->|fasta| p4
+    p4 --> p7
+    p4 --> p6
+    p4 --> p5

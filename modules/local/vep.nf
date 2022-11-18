@@ -12,7 +12,10 @@ process VEP {
       1) VEP output file for each VCF
       2) A tabix index for that VCF output file
   */
-  container "${params.singularity_dir}/vep.sif"
+  // container "${params.singularity_dir}/vep.sif"
+  tag "$meta.id"
+  label 'process_medium'
+  container 'docker://ensemblorg/ensembl-vep:release_108.1'
 
   input:
   tuple val(meta), path(vcf), path(index)
@@ -20,8 +23,9 @@ process VEP {
   path(fasta)
   
   output:
-  tuple val(meta), path("*.vep.vcf.gz"), path("*.vep.vcf.gz.tbi") ,  emit: vcf_with_index
-  path("*.vep.vcf.gz_summary.*") ,                                   emit: report
+  tuple val(meta), path("*.vep.vcf.gz"), path("*.vep.vcf.gz.tbi") , emit: vcf_with_index
+  path "*.vep.vcf.gz_summary.*"                                   , emit: report
+  path "versions.yml"                                             , emit: versions
 
   script:
   def prefix = task.ext.prefix ?: "${meta.id}"
@@ -35,5 +39,12 @@ process VEP {
       --config ${vep_config} \\
       ${fasta_file} 
   tabix ${prefix}.vep.vcf.gz
+
+
+  cat <<-END_VERSIONS > versions.yml
+  "${task.process}":
+      ensemblvep: \$( echo \$(vep --help 2>&1) | sed 's/^.*Versions:.*ensembl-vep : //;s/ .*\$//')
+      tabix: \$(echo \$(tabix -h 2>&1) | sed 's/^.*Version: //; s/ .*\$//')
+  END_VERSIONS
   """
 }

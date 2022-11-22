@@ -32,7 +32,11 @@ if (params.help) {
 log.info 'Starting workflow.....'
 
 workflow RUN_PLINK {
+    if (!params.vcf_folder) { exit 1, "Undefined --vcf_folder parameter. Please provide the folder containing the VCFs." }
+    vcf_folder = params.vcf_folder
+    Channel.fromPath(vcf_folder + "/" + "*.vcf.gz").map { it -> tuple([id: it.simpleName], it }.set { vcf_channel }
     ped_file = file(params.ped_file, checkIfExists: true)
+    PLINK2_VCF(vcf_channel)
 }
 
 workflow DROP_GENOTYPES {

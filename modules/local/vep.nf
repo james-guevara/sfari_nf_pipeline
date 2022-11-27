@@ -37,7 +37,8 @@ process VEP {
       --vcf \\
       --compress_output bgzip \\
       --config ${vep_config} \\
-      ${fasta_file} 
+      ${fasta_file} \\
+      --fork $task.cpus
   tabix ${prefix}.vep.vcf.gz
 
 

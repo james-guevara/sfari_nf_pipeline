@@ -5,8 +5,6 @@
  *
  */
 
-params.vep_config = "vep.ini"
-
 include { VEP } from '../modules/local/vep.nf'
 include { BCFTOOLS_VIEW as BCFTOOLS_VIEW_DROP_GENOTYPES } from '../modules/nf-core/bcftools/view/main'
 include { TABIX_TABIX as TABIX } from '../modules/nf-core/tabix/tabix/main'
@@ -34,30 +32,27 @@ log.info 'Starting workflow.....'
 if (!params.fasta) { exit 1, "Undefined --fasta parameter. Please provide the FASTA reference filepath." }
 if (!params.ped == "") { exit 1, "Undefined --ped parameter. Please provide the PED filepath." }
 if (!params.vcfs) { exit 1, "Undefined --vcfs parameter. Please provide the VCF folder." }
+if (!params.vep_config) { exit 1, "Undefined --vep_config parameter. Please provide the VEP configuration filepath." }
 
-Channel.fromPath(params.vcfs + "/" + "*.vcf.gz").map { it -> tuple([id: it.simpleName, ped: file(params.ped, checkIfExists: true)], it, file(it + ".tbi", checkIfExists: true) ) }.set { vcf_channel }
-// Channel.fromPath(params.vcfs + "/" + "*.vcf.gz").map { it -> tuple([id: it.simpleName, ped: params.ped], it, file(it + ".tbi", checkIfExists: true) ) }.set { vcf_channel }
+Channel.fromPath(params.vcfs + "/" + "*.vcf.gz").map { it -> tuple([id: it.simpleName], it, file(it + ".tbi", checkIfExists: true)) }.set { vcf_channel }
 
 workflow RUN_PLINK {
     PLINK2_VCF( vcf_channel )
 }
 
 workflow DROP_GENOTYPES {
-    Channel.fromPath(params.vcfs + "/" + "*.vcf.gz").map { it -> tuple([id: it.simpleName], it, file(it + ".tbi", checkIfExists: true)) }.set { vcf_channel }
     BCFTOOLS_VIEW_DROP_GENOTYPES( vcf_channel, [], [], [] )
     TABIX( BCFTOOLS_VIEW_DROP_GENOTYPES.out.vcf )
 }
 
 workflow RUN_VEP {
-    vep_config = file(params.vep_config, checkIfExists: true)
-    fasta = file(params.fasta, checkIfExists: true)
-    Channel.fromPath("/expanse/lustre/scratch/j3guevar/temp_project/nf_output_dir/*.vcf.gz").map { it -> tuple([id: it.simpleName], it, file(it + ".tbi", checkIfExists: true)) }.set { vcf_channel }
-    VEP( vcf_channel, vep_config, fasta )
+    // vep_config = file(params.vep_config, checkIfExists: true)
+    // fasta = file(params.fasta, checkIfExists: true)
+    // VEP( vcf_channel, vep_config, fasta )
+    VEP( vcf_channel, file(params.vep_config, checkIfExists: true), file(params.fasta, checkIfExists: true) )
 }
 
 workflow {
-    print(params.fasta)
-    print(params.ped)
     vcf_channel.view()
 }
 

@@ -28,6 +28,7 @@ process VEP {
   path "versions.yml"                                             , emit: versions
 
   script:
+  def args = task.ext.args ?: ''
   def prefix = task.ext.prefix ?: "${meta.id}"
   def fasta_file = fasta ? "--fasta ${fasta}" : ""
   """
@@ -38,7 +39,8 @@ process VEP {
       --compress_output bgzip \\
       --config ${vep_config} \\
       ${fasta_file} \\
-      --fork $task.cpus
+      --fork $task.cpus \\
+      $args
   tabix ${prefix}.vep.vcf.gz
 
 
@@ -47,5 +49,19 @@ process VEP {
       ensemblvep: \$( echo \$(vep --help 2>&1) | sed 's/^.*Versions:.*ensembl-vep : //;s/ .*\$//')
       tabix: \$(echo \$(tabix -h 2>&1) | sed 's/^.*Version: //; s/ .*\$//')
   END_VERSIONS
+  """
+
+  stub:
+  def prefix = task.ext.prefix ?: "${meta.id}"
+  """
+  touch ${prefix}.vep.vcf.gz
+  touch ${prefix}.vep.vcf.gz.tbi
+  touch ${prefix}.vep.vcf.gz_summary.html
+  cat <<-END_VERSIONS > versions.yml
+  "${task.process}":
+      ensemblvep: \$( echo \$(vep --help 2>&1) | sed 's/^.*Versions:.*ensembl-vep : //;s/ .*\$//')
+      tabix: \$(echo \$(tabix -h 2>&1) | sed 's/^.*Version: //; s/ .*\$//')
+  END_VERSIONS
+  echo $PERL5LIB
   """
 }

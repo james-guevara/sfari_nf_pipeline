@@ -5,10 +5,10 @@
  *
  */
 
-include { VEP } from '../modules/local/vep.nf'
-include { BCFTOOLS_VIEW as BCFTOOLS_VIEW_DROP_GENOTYPES } from '../modules/nf-core/bcftools/view/main'
-include { TABIX_TABIX as TABIX } from '../modules/nf-core/tabix/tabix/main'
-include { PLINK2_VCF } from '../modules/nf-core/plink2/vcf/main'
+include { VEP } from 'modules/local/vep.nf'
+include { BCFTOOLS_VIEW as BCFTOOLS_VIEW_DROP_GENOTYPES } from 'modules/nf-core/bcftools/view/main'
+include { TABIX_TABIX as TABIX } from 'modules/nf-core/tabix/tabix/main'
+include { PLINK2_VCF } from 'modules/nf-core/plink2/vcf/main'
 
 if (params.help) {
   log.info ''
@@ -16,7 +16,7 @@ if (params.help) {
   log.info '-------------------------------------------------------'
   log.info ''
   log.info 'Usage: '
-  log.info '  nextflow run workflows/run_vep.nf --ped <ped_filepath> --fasta <fasta_filepath> --vcfs <vcf_folder> --vep_config <vep_ini_filepath>'
+  log.info '  nextflow run main.nf --ped <ped_filepath> --fasta <fasta_filepath> --vcfs <vcf_folder> --vep_config <vep_ini_filepath>'
   log.info ''
   log.info 'Options:'
   log.info '  --cpus INT                       Number of CPUs to use. Default 1.'
@@ -46,14 +46,9 @@ workflow DROP_GENOTYPES {
 }
 
 workflow RUN_VEP {
-    // vep_config = file(params.vep_config, checkIfExists: true)
-    // fasta = file(params.fasta, checkIfExists: true)
-    // VEP( vcf_channel, vep_config, fasta )
     VEP( vcf_channel, file(params.vep_config, checkIfExists: true), file(params.fasta, checkIfExists: true) )
 }
 
 workflow {
     vcf_channel.view()
 }
-
-
